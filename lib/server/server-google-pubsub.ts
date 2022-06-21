@@ -113,7 +113,8 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      */
     private async bindHandlers(callback: () => void) {
         // Set up our subscriptions from any decorated topics
-        await from(this.messageHandlers)
+        const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+        await from(handlers)
             .pipe(mergeMap(([pattern]) => this.getSubscriptionFromPattern(pattern)))
             .toPromise();
 
