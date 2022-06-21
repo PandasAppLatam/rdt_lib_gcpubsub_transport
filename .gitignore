@@ -1,7 +1,49 @@
-.idea/
-node_modules
-dist
-docs/
-.tsbuildinfo
-coverage
-coverage-e2e
+# compiled output
+/dist
+/node_modules
+
+.env 
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+dev
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment variables
+.env
+# Deployment files
+app.yaml
+app.prod.yaml
+app-prod.yaml
+app.production.yaml
+
+# Credentials files
+pandas-app-production-firebase-adminsdk-ah3sy-c0762fabf6.json
+pandas-app-production-231a4e8c4357.json
+pandas-app-dev-528186b75d5e.json
