@@ -1,0 +1,1 @@
+{"version":3,"file":"google-pubsub.deserializer.js","sourceRoot":"","sources":["../../../lib/deserializers/google-pubsub.deserializer.ts"],"names":[],"mappings":";;;AAGA,MAAa,+BAA+B;IAExC,WAAW,CACP,KAA0B,EAC1B,OAA6B;QAE7B,OAAO;YACH,OAAO,EAAE,OAAO,CAAC,QAAQ;YACzB,IAAI,EAAE,KAAK;SACd,CAAC;IACN,CAAC;CACJ;AAXD,0EAWC"}

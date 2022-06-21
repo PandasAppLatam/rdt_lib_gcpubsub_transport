@@ -1,0 +1,1 @@
+{"version":3,"file":"basic-nack.strategy.js","sourceRoot":"","sources":["../../../lib/strategies/basic-nack.strategy.ts"],"names":[],"mappings":";;;AAGA,MAAa,iBAAiB;IACnB,IAAI,CACP,KAAc,EACd,GAAgB,EAChB,IAAkB,EAClB,GAAwB;QAExB,IAAI,GAAG,CAAC,WAAW,EAAE,EAAE;YACnB,IAAI,EAAE,CAAC;SACV;QACD,OAAO,OAAO,CAAC,OAAO,EAAE,CAAC;IAC7B,CAAC;CACJ;AAZD,8CAYC"}

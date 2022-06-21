@@ -1,0 +1,1 @@
+{"version":3,"file":"google-pubsub-message-body.decorator.d.ts","sourceRoot":"","sources":["../../../lib/decorators/google-pubsub-message-body.decorator.ts"],"names":[],"mappings":"AACA,OAAO,EAAwB,gBAAgB,EAAE,MAAM,gBAAgB,CAAC;AAGxE,eAAO,MAAM,cAAc,QAClB,MAAM,GAAG,SAAS,OAClB,gBAAgB,KACtB,OAAO,MAAM,EAAE,OAAO,CAAC,GAAG,OAW5B,CAAC;AAEF,eAAO,MAAM,uBAAuB,qMAA2D,CAAC"}
