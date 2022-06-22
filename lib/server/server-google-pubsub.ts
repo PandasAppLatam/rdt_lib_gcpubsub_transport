@@ -107,6 +107,10 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
         this.nackStrategy = options?.nackStrategy ?? new BasicNackStrategy();
         this.deserializer = new GooglePubSubMessageDeserializer();
         this.handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+
+        console.log('PubSub client', this.googlePubSubClient);
+        console.log('Create subscriptions', this.createSubscriptions);
+        console.log('Handlers', this.handlers);
     }
 
     public listen(callback: () => void): void {
