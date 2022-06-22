@@ -89,11 +89,6 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      */
     private readonly subscriptions: Map<string, GooglePubSubSubscription> = new Map();
 
-    /**
-     * Handlers registered in the application
-     */
-    private readonly handlers: Map<string, MessageHandler<any, any, any>>;
-
     constructor(options?: GooglePubSubTransportOptions) {
         super();
         this.googlePubSubClient = options?.client ?? new ClientGooglePubSub();
@@ -106,11 +101,10 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
         this.ackStrategy = options?.ackStrategy ?? new BasicAckStrategy();
         this.nackStrategy = options?.nackStrategy ?? new BasicNackStrategy();
         this.deserializer = new GooglePubSubMessageDeserializer();
-        this.handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
 
         console.log('PubSub client', this.googlePubSubClient);
         console.log('Create subscriptions', this.createSubscriptions);
-        console.log('Handlers', this.handlers);
+        console.log('Pre filter handlers', this.messageHandlers)
     }
 
     public listen(callback: () => void): void {
@@ -123,7 +117,9 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      */
     private async bindHandlers(callback: () => void) {
         // Set up our subscriptions from any decorated topics
-        await from(this.handlers)
+        const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+        console.log('filtered handlers', handlers)
+        await from(handlers)
             .pipe(mergeMap(([pattern]) => this.getSubscriptionFromPattern(pattern)))
             .toPromise();
 
@@ -314,7 +310,7 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
                     throw new TransportError(
                         'Handler should never be nullish.',
                         pattern,
-                        Array.from(this.handlers.keys()),
+                        Array.from(this.messageHandlers.keys()),
                     );
                 }
                 return from(handler(packet, ctx)).pipe(
@@ -346,6 +342,6 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
     }
 
     public getHandlerByPattern(pattern: string): MessageHandler | null {
-        return this.handlers.get(pattern) ?? null;
+        return this.messageHandlers.get(pattern) ?? null;
     }
 }
