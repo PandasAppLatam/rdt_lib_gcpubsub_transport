@@ -90,7 +90,7 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
     private readonly subscriptions: Map<string, GooglePubSubSubscription> = new Map();
 
     /**
-     * GooglePubSubSubscriptions keyed by pattern
+     * Handlers registered in the application
      */
     private readonly handlers: Map<string, MessageHandler<any, any, any>>;
 
@@ -138,6 +138,7 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      * @param pattern - The pattern from the \@GooglePubSubMessageHandler decorator
      */
     private async getSubscriptionFromPattern(pattern: string): Promise<void> {
+        console.log('parsing subscription from pattern', pattern)
         const metadata = this.parsePattern(pattern);
 
         const subscriptionName: string = this.getSubscriptionName(metadata, pattern);
@@ -150,9 +151,12 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
         );
 
         if (subscription) {
+            console.log(`Mapped {${subscription.name}} handler`);
             this.logger.log(`Mapped {${subscription.name}} handler`);
             this.subscriptions.set(pattern, subscription);
         }
+
+        console.log('subscriptions', this.subscriptions);
     }
 
     /**
