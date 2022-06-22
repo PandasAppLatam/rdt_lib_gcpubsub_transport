@@ -108,7 +108,7 @@ class GooglePubSubTransport extends microservices_1.Server {
         this.handleMessage = ([pattern, packet, ctx]) => {
             return (0, rxjs_1.of)(this.getHandlerByPattern(pattern)).pipe((0, operators_1.mergeMap)((handler) => {
                 if (handler == null) {
-                    throw new transport_error_exception_1.TransportError('Handler should never be nullish.', pattern, Array.from(this.messageHandlers.keys()));
+                    throw new transport_error_exception_1.TransportError('Handler should never be nullish.', pattern, Array.from(this.handlers.keys()));
                 }
                 return (0, rxjs_1.from)(handler(packet, ctx)).pipe((0, operators_1.mergeMap)((i) => this.transformToObservable(i)), (0, operators_1.mapTo)(null));
             }), (0, operators_1.catchError)((err) => {
@@ -134,6 +134,7 @@ class GooglePubSubTransport extends microservices_1.Server {
         this.ackStrategy = (_g = options === null || options === void 0 ? void 0 : options.ackStrategy) !== null && _g !== void 0 ? _g : new basic_ack_strategy_1.BasicAckStrategy();
         this.nackStrategy = (_h = options === null || options === void 0 ? void 0 : options.nackStrategy) !== null && _h !== void 0 ? _h : new basic_nack_strategy_1.BasicNackStrategy();
         this.deserializer = new deserializers_1.GooglePubSubMessageDeserializer();
+        this.handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
     }
     listen(callback) {
         this.bindHandlers(callback);
@@ -144,8 +145,7 @@ class GooglePubSubTransport extends microservices_1.Server {
      */
     async bindHandlers(callback) {
         // Set up our subscriptions from any decorated topics
-        const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
-        await (0, rxjs_1.from)(handlers)
+        await (0, rxjs_1.from)(this.handlers)
             .pipe((0, operators_1.mergeMap)(([pattern]) => this.getSubscriptionFromPattern(pattern)))
             .toPromise();
         // Group all of our event listeners into an array
@@ -208,7 +208,7 @@ class GooglePubSubTransport extends microservices_1.Server {
     }
     getHandlerByPattern(pattern) {
         var _a;
-        return (_a = this.messageHandlers.get(pattern)) !== null && _a !== void 0 ? _a : null;
+        return (_a = this.handlers.get(pattern)) !== null && _a !== void 0 ? _a : null;
     }
 }
 exports.GooglePubSubTransport = GooglePubSubTransport;

@@ -53,6 +53,10 @@ export declare class GooglePubSubTransport extends Server implements CustomTrans
      * GooglePubSubSubscriptions keyed by pattern
      */
     private readonly subscriptions;
+    /**
+     * GooglePubSubSubscriptions keyed by pattern
+     */
+    private readonly handlers;
     constructor(options?: GooglePubSubTransportOptions);
     listen(callback: () => void): void;
     /**
