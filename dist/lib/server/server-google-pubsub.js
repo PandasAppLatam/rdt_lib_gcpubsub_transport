@@ -144,17 +144,22 @@ class GooglePubSubTransport extends microservices_1.Server {
      */
     async bindHandlers(callback) {
         // Set up our subscriptions from any decorated topics
-        const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
-        await (0, rxjs_1.from)(handlers)
-            .pipe((0, operators_1.mergeMap)(([pattern]) => this.getSubscriptionFromPattern(pattern)))
-            .toPromise();
-        // Group all of our event listeners into an array
-        const listeners = Array.from(this.subscriptions, this.subscribeMessageEvent);
-        // Pass every emitted event through the same pipeline
-        this.listenerSubscription = (0, rxjs_1.merge)(...listeners)
-            .pipe((0, operators_1.map)(this.deserializeAndAddContext), (0, operators_1.mergeMap)(this.handleMessage))
-            .subscribe();
-        callback();
+        try {
+            const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+            await (0, rxjs_1.from)(handlers)
+                .pipe((0, operators_1.mergeMap)(([pattern]) => this.getSubscriptionFromPattern(pattern)))
+                .toPromise();
+            // Group all of our event listeners into an array
+            const listeners = Array.from(this.subscriptions, this.subscribeMessageEvent);
+            // Pass every emitted event through the same pipeline
+            this.listenerSubscription = (0, rxjs_1.merge)(...listeners)
+                .pipe((0, operators_1.map)(this.deserializeAndAddContext), (0, operators_1.mergeMap)(this.handleMessage))
+                .subscribe();
+            callback();
+        }
+        catch (error) {
+            this.logger.log('Error binding handlers', error);
+        }
     }
     /**
      * Resolve subscriptions and create them if `createSubscription` is true

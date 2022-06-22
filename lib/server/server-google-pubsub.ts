@@ -113,19 +113,23 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      */
     private async bindHandlers(callback: () => void) {
         // Set up our subscriptions from any decorated topics
-        const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
-        await from(handlers)
-            .pipe(mergeMap(([pattern]) => this.getSubscriptionFromPattern(pattern)))
-            .toPromise();
+        try {
+            const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+            await from(handlers)
+                .pipe(mergeMap(([pattern]) => this.getSubscriptionFromPattern(pattern)))
+                .toPromise();
 
-        // Group all of our event listeners into an array
-        const listeners = Array.from(this.subscriptions, this.subscribeMessageEvent);
+            // Group all of our event listeners into an array
+            const listeners = Array.from(this.subscriptions, this.subscribeMessageEvent);
 
-        // Pass every emitted event through the same pipeline
-        this.listenerSubscription = merge(...listeners)
-            .pipe(map(this.deserializeAndAddContext), mergeMap(this.handleMessage))
-            .subscribe();
-        callback();
+            // Pass every emitted event through the same pipeline
+            this.listenerSubscription = merge(...listeners)
+                .pipe(map(this.deserializeAndAddContext), mergeMap(this.handleMessage))
+                .subscribe();
+            callback();
+        } catch (error: any) {
+            this.logger.log('Error binding handlers', error);
+        }
     }
 
     /**
