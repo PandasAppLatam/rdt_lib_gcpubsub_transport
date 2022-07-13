@@ -1,7 +1,6 @@
 # compiled output
 /node_modules
 
-.env 
 # Logs
 logs
 *.log
@@ -36,6 +35,7 @@ dev
 
 # Environment variables
 .env
+
 # Deployment files
 app.yaml
 app.prod.yaml

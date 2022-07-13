@@ -145,7 +145,9 @@ class GooglePubSubTransport extends microservices_1.Server {
     async bindHandlers(callback) {
         // Set up our subscriptions from any decorated topics
         try {
+            console.log('all handlers:', this.messageHandlers);
             const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+            console.log('filtered handlers:', this.messageHandlers);
             await (0, rxjs_1.from)(handlers)
                 .pipe((0, operators_1.mergeMap)(([pattern]) => this.getSubscriptionFromPattern(pattern)))
                 .toPromise();

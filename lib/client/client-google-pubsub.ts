@@ -6,7 +6,7 @@ import {
     Topic,
 } from '@google-cloud/pubsub';
 import { Injectable } from '@nestjs/common';
-import { ClientProxy, ReadPacket, WritePacket } from '@nestjs/microservices';
+import { ClientProxy } from '@nestjs/microservices';
 import { from, fromEvent, Observable, of, OperatorFunction, throwError } from 'rxjs';
 import { map, mapTo, mergeMap } from 'rxjs/operators';
 import { GOOGLE_PUBSUB_SUBSCRIPTION_MESSAGE_EVENT } from '../constants';

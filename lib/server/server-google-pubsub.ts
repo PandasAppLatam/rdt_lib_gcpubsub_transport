@@ -114,7 +114,9 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
     private async bindHandlers(callback: () => void) {
         // Set up our subscriptions from any decorated topics
         try {
+            console.log('all handlers:', this.messageHandlers);
             const handlers = new Map([...this.messageHandlers].filter((h) => h[1].isEventHandler));
+            console.log('filtered handlers:', this.messageHandlers);
             await from(handlers)
                 .pipe(mergeMap(([pattern]) => this.getSubscriptionFromPattern(pattern)))
                 .toPromise();
@@ -137,7 +139,9 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      * @param pattern - The pattern from the \@GooglePubSubMessageHandler decorator
      */
     private async getSubscriptionFromPattern(pattern: string): Promise<void> {
+        console.log('pattern:', pattern);
         const metadata = this.parsePattern(pattern);
+        console.log('metadata:', metadata);
 
         const subscriptionName: string = this.getSubscriptionName(metadata, pattern);
 
