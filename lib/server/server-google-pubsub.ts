@@ -1,7 +1,7 @@
 import { CreateSubscriptionOptions } from '@google-cloud/pubsub';
 import { Logger } from '@nestjs/common';
 import { CustomTransportStrategy, MessageHandler, ReadPacket, Server } from '@nestjs/microservices';
-import { from, merge, Observable, of, Subscription } from 'rxjs';
+import { firstValueFrom, from, merge, Observable, of, Subscription } from 'rxjs';
 import { catchError, map, mapTo, mergeMap } from 'rxjs/operators';
 import { ClientGooglePubSub } from '../client';
 import { GooglePubSubContext as GooglePubSubContext } from '../ctx-host/google-pubsub.context';
@@ -84,10 +84,16 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
      */
     private listenerSubscription: Subscription | null = null;
 
+    private iterators: [string, AsyncGenerator<GooglePubSubMessage[]>][] | null = null;
     /**
      * GooglePubSubSubscriptions keyed by pattern
      */
     private readonly subscriptions: Map<string, GooglePubSubSubscription> = new Map();
+
+    /**
+     * Subscription Iterators for one-at-a-time processing keyed by pattern
+     */
+    private readonly synchronousSubscriptions: Map<string, GooglePubSubSubscription> = new Map();
 
     constructor(options?: GooglePubSubTransportOptions) {
         super();
@@ -105,6 +111,15 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
 
     public listen(callback: () => void): void {
         this.bindHandlers(callback);
+    }
+
+    /**
+     * Pull messages from the subscription iterators marked with {@link oneAtATime}
+     */
+    private startPullSyncMessages() {
+        if (this.iterators) {
+            this.iterators.map((iterator) => this.handleMessageSync(iterator));
+        }
     }
 
     /**
@@ -126,6 +141,15 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
             this.listenerSubscription = merge(...listeners)
                 .pipe(map(this.deserializeAndAddContext), mergeMap(this.handleMessage))
                 .subscribe();
+            this.iterators = Array.from(
+                this.synchronousSubscriptions,
+                this.getSubscriptionIterator,
+                this,
+            );
+
+            //for one at a time messages, pull events from their iterators and handle them
+            // synchronously
+            this.startPullSyncMessages();
             callback();
         } catch (error: any) {
             this.logger.log('Error binding handlers', error);
@@ -149,7 +173,11 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
 
         if (subscription) {
             this.logger.log(`Mapped {${subscription.name}} handler`);
-            this.subscriptions.set(pattern, subscription);
+            if (metadata.oneAtATime) {
+                this.synchronousSubscriptions.set(pattern, subscription);
+            } else {
+                this.subscriptions.set(pattern, subscription);
+            }
         }
     }
 
@@ -276,6 +304,19 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
     };
 
     /**
+     *
+     * @param pattern - The subscription pattern
+     * @param subscription - The subscription
+     * @returns The pattern and an iterator for the subscription
+     */
+    private getSubscriptionIterator([pattern, subscription]: [string, GooglePubSubSubscription]): [
+        string,
+        AsyncGenerator<GooglePubSubMessage[]>,
+    ] {
+        return [pattern, this.googlePubSubClient.getMessageIterator(subscription)];
+    }
+
+    /**
      * Convert each message into a ReadPacket and include pattern and Context
      */
     private deserializeAndAddContext = ([pattern, message]: [string, GooglePubSubMessage]): [
@@ -289,6 +330,23 @@ export class GooglePubSubTransport extends Server implements CustomTransportStra
             new GooglePubSubContext([message, pattern, this.autoAck, this.autoNack]),
         ];
     };
+
+    /**
+     * Pull messages from the iterator and pass them to the subscription handler
+     * @param pattern - The subscription name
+     * @param iterator - The message iterator
+     */
+    private async handleMessageSync([pattern, iterator]: [
+        string,
+        AsyncGenerator<GooglePubSubMessage[]>,
+    ]) {
+        for await (const [message] of iterator) {
+            if (message) {
+                const data = this.deserializeAndAddContext([pattern, message]);
+                await firstValueFrom(this.handleMessage(data));
+            }
+        }
+    }
 
     /**
      * Pass ReadPacket to internal `handleEvent` method
