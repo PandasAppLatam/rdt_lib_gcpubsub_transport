@@ -16,6 +16,7 @@ const microservices_1 = require("@nestjs/microservices");
 const rxjs_1 = require("rxjs");
 const operators_1 = require("rxjs/operators");
 const constants_1 = require("../constants");
+const node_events_1 = require("node:events");
 /**
  * Proxy for the Google PubSub client
  */
@@ -106,6 +107,12 @@ let ClientGooglePubSub = class ClientGooglePubSub extends microservices_1.Client
      */
     listenForMessages(subscription) {
         return (0, rxjs_1.fromEvent)(this.getSubscription(subscription), constants_1.GOOGLE_PUBSUB_SUBSCRIPTION_MESSAGE_EVENT);
+    }
+    async *getMessageIterator(subscription) {
+        const subObj = this.getSubscription(subscription);
+        for await (const message of (0, node_events_1.on)(subObj, constants_1.GOOGLE_PUBSUB_SUBSCRIPTION_MESSAGE_EVENT)) {
+            yield message;
+        }
     }
     /**
      * Get a Topic instance from the PubSub client. If a Topic instance is supplied

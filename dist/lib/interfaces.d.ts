@@ -12,11 +12,13 @@ export declare type NackFunction = () => void;
 export interface GooglePubSubSubscriptionPatternMetadata {
     subscriptionName: string;
     createOptions?: CreateSubscriptionOptions;
+    oneAtATime?: boolean;
     topicName?: string;
 }
 export interface GooglePubSubTopicPatternMetadata {
     subscriptionName?: string;
     createOptions?: CreateSubscriptionOptions;
+    oneAtATime?: boolean;
     topicName: string;
 }
 export declare type GooglePubSubPatternMetadata = GooglePubSubSubscriptionPatternMetadata | GooglePubSubTopicPatternMetadata;
@@ -25,6 +27,7 @@ export interface GooglePubSubTransportOptions {
     createSubscriptions?: boolean;
     autoAck?: boolean;
     autoNack?: boolean;
+    oneAtATime?: boolean;
     subscriptionNamingStrategy?: SubscriptionNamingStrategy;
     topicNamingStrategy?: TopicNamingStrategy;
     ackStrategy?: AckStrategy;

@@ -27,10 +27,15 @@ class GooglePubSubTransport extends microservices_1.Server {
          * Subscription for all message listeners
          */
         this.listenerSubscription = null;
+        this.iterators = null;
         /**
          * GooglePubSubSubscriptions keyed by pattern
          */
         this.subscriptions = new Map();
+        /**
+         * Subscription Iterators for one-at-a-time processing keyed by pattern
+         */
+        this.synchronousSubscriptions = new Map();
         /**
          * Parse a metadata pattern, throwing an exception if it cannot be parsed.
          *
@@ -139,6 +144,14 @@ class GooglePubSubTransport extends microservices_1.Server {
         this.bindHandlers(callback);
     }
     /**
+     * Pull messages from the subscription iterators marked with {@link oneAtATime}
+     */
+    startPullSyncMessages() {
+        if (this.iterators) {
+            this.iterators.map((iterator) => this.handleMessageSync(iterator));
+        }
+    }
+    /**
      * Bind message handlers to subscription instances
      * @param callback - The callback to be invoked when all handlers have been bound
      */
@@ -155,6 +168,10 @@ class GooglePubSubTransport extends microservices_1.Server {
             this.listenerSubscription = (0, rxjs_1.merge)(...listeners)
                 .pipe((0, operators_1.map)(this.deserializeAndAddContext), (0, operators_1.mergeMap)(this.handleMessage))
                 .subscribe();
+            this.iterators = Array.from(this.synchronousSubscriptions, this.getSubscriptionIterator, this);
+            //for one at a time messages, pull events from their iterators and handle them
+            // synchronously
+            this.startPullSyncMessages();
             callback();
         }
         catch (error) {
@@ -171,7 +188,12 @@ class GooglePubSubTransport extends microservices_1.Server {
         const subscription = await this.getOrCreateSubscription(subscriptionName, metadata.topicName, metadata.createOptions, pattern);
         if (subscription) {
             this.logger.log(`Mapped {${subscription.name}} handler`);
-            this.subscriptions.set(pattern, subscription);
+            if (metadata.oneAtATime) {
+                this.synchronousSubscriptions.set(pattern, subscription);
+            }
+            else {
+                this.subscriptions.set(pattern, subscription);
+            }
         }
     }
     /**
@@ -203,6 +225,28 @@ class GooglePubSubTransport extends microservices_1.Server {
             };
         }
         throw new errors_1.InvalidPatternMetadataException(pattern);
+    }
+    /**
+     *
+     * @param pattern - The subscription pattern
+     * @param subscription - The subscription
+     * @returns The pattern and an iterator for the subscription
+     */
+    getSubscriptionIterator([pattern, subscription]) {
+        return [pattern, this.googlePubSubClient.getMessageIterator(subscription)];
+    }
+    /**
+     * Pull messages from the iterator and pass them to the subscription handler
+     * @param pattern - The subscription name
+     * @param iterator - The message iterator
+     */
+    async handleMessageSync([pattern, iterator]) {
+        for await (const [message] of iterator) {
+            if (message) {
+                const data = this.deserializeAndAddContext([pattern, message]);
+                await (0, rxjs_1.firstValueFrom)(this.handleMessage(data));
+            }
+        }
     }
     /**
      * This is called on transport close by the NestJS internals

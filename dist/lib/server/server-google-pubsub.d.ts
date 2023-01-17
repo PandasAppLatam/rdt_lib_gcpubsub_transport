@@ -49,12 +49,21 @@ export declare class GooglePubSubTransport extends Server implements CustomTrans
      * Subscription for all message listeners
      */
     private listenerSubscription;
+    private iterators;
     /**
      * GooglePubSubSubscriptions keyed by pattern
      */
     private readonly subscriptions;
+    /**
+     * Subscription Iterators for one-at-a-time processing keyed by pattern
+     */
+    private readonly synchronousSubscriptions;
     constructor(options?: GooglePubSubTransportOptions);
     listen(callback: () => void): void;
+    /**
+     * Pull messages from the subscription iterators marked with {@link oneAtATime}
+     */
+    private startPullSyncMessages;
     /**
      * Bind message handlers to subscription instances
      * @param callback - The callback to be invoked when all handlers have been bound
@@ -103,9 +112,22 @@ export declare class GooglePubSubTransport extends Server implements CustomTrans
      */
     private subscribeMessageEvent;
     /**
+     *
+     * @param pattern - The subscription pattern
+     * @param subscription - The subscription
+     * @returns The pattern and an iterator for the subscription
+     */
+    private getSubscriptionIterator;
+    /**
      * Convert each message into a ReadPacket and include pattern and Context
      */
     private deserializeAndAddContext;
+    /**
+     * Pull messages from the iterator and pass them to the subscription handler
+     * @param pattern - The subscription name
+     * @param iterator - The message iterator
+     */
+    private handleMessageSync;
     /**
      * Pass ReadPacket to internal `handleEvent` method
      */

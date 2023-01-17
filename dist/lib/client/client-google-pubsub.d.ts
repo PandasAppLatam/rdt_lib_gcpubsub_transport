@@ -1,4 +1,4 @@
-import { CreateSubscriptionOptions } from '@google-cloud/pubsub';
+import { CreateSubscriptionOptions, Subscription } from '@google-cloud/pubsub';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
 import { ClientGooglePubSubOutgoingRequestSerializedData, ClientHealthInfo, GooglePubSubMessage, GooglePubSubMessageAttributes, GooglePubSubOptions, GooglePubSubSubscription, GooglePubSubTopic, PublishData } from '../interfaces';
@@ -50,7 +50,8 @@ export declare class ClientGooglePubSub extends ClientProxy {
      * @param subscription
      * @returns
      */
-    listenForMessages(subscription: string | GooglePubSubSubscription): Observable<GooglePubSubMessage>;
+    listenForMessages(subscription: string | Subscription): Observable<GooglePubSubMessage>;
+    getMessageIterator(subscription: string | Subscription): AsyncGenerator<GooglePubSubMessage[]>;
     /**
      * Get a Topic instance from the PubSub client. If a Topic instance is supplied
      * then the returned Topic will point to the same instance.
